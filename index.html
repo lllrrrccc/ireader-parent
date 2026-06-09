@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语周报双语阅读本 - 家长端原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { DEFAULT: '#2563EB', light: '#EFF6FF', dark: '#1D4ED8' },
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        slate: { 50: '#F8FAFC', 100: '#F1F5F9', 200: '#E2E8F0', 300: '#CBD5E1', 400: '#94A3B8', 500: '#64748B', 600: '#475569', 700: '#334155', 800: '#1E293B', 900: '#0F172A' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif; }
+        .iphone-frame {
+            width: 393px; height: 852px; border-radius: 55px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 0 0 12px #1a1a1a, 0 0 0 14px #333;
+            position: relative; overflow: hidden; background: #000;
+        }
+        .dynamic-island {
+            position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+            width: 126px; height: 37px; background: #000; border-radius: 20px; z-index: 50;
+        }
+        .screen-content {
+            width: 100%; height: 100%; background: #F8FAFC; overflow-y: auto;
+            padding-top: 50px; padding-bottom: 84px; position: relative;
+        }
+        .screen-content::-webkit-scrollbar { display: none; }
+        /* 微信小程序胶囊按钮 - 标准样式 */
+        .wechat-capsule {
+            position: absolute; top: 52px; right: 8px; z-index: 40;
+            display: flex; align-items: center; background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px); border-radius: 16px; border: 0.5px solid rgba(0,0,0,0.08);
+            height: 32px; overflow: hidden;
+        }
+        .wechat-capsule .cap-btn {
+            width: 38px; height: 32px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative;
+        }
+        .wechat-capsule .cap-btn:first-child::after {
+            content: ''; position: absolute; right: 0; top: 6px; bottom: 6px;
+            width: 0.5px; background: rgba(0,0,0,0.08);
+        }
+        .wechat-capsule .cap-btn i { font-size: 14px; color: #1E293B; }
+        .tab-bar {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 84px;
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
+            border-top: 0.5px solid rgba(0,0,0,0.06); display: flex; z-index: 40;
+            padding-bottom: 20px; justify-content: space-around; align-items: center;
+        }
+        .tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+        .tab-item i { font-size: 22px; }
+        .tab-item span { font-size: 10px; }
+        .tab-item.active { color: #2563EB; }
+        .tab-item:not(.active) { color: #94A3B8; }
+        .page { display: none; animation: fadeIn 0.25s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .child-card {
+            min-width: 100px; padding: 12px 16px; border-radius: 14px;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            cursor: pointer; transition: all 0.2s; border: 2px solid transparent;
+        }
+        .child-card.active { background: #EFF6FF; border-color: #2563EB; }
+        .child-card:not(.active) { background: white; border-color: #E2E8F0; }
+        .btn-press:active { transform: scale(0.96); }
+        .book-cover {
+            width: 70px; height: 95px; border-radius: 6px; object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .nav-header {
+            position: sticky; top: 0; z-index: 30; background: rgba(248,250,252,0.92);
+            backdrop-filter: blur(12px); padding: 8px 16px 12px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: rgba(30,41,59,0.9); color: white; padding: 10px 20px;
+            border-radius: 24px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 100;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .status-tag {
+            display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+        }
+        .status-ongoing { background: #EFF6FF; color: #2563EB; }
+        .status-done { background: #ECFDF5; color: #10B981; }
+        .status-overdue { background: #FEF2F2; color: #EF4444; }
+        .chart-bar { border-radius: 4px; transition: height 0.5s ease; }
+        .child-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #EFF6FF; color: #2563EB; padding: 4px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+        }
+        .readonly-field {
+            background: #F1F5F9; color: #64748B;
+        }
+    </style>
+</head>
+<body class="bg-gray-200 min-h-screen flex items-center justify-center p-8">
+
+    <!-- iPhone 16 Frame -->
+    <div class="iphone-frame">
+        <div class="dynamic-island"></div>
+        
+        <!-- Status Bar -->
+        <div class="absolute top-0 left-0 right-0 h-[50px] flex items-end justify-between px-8 pb-1 text-white text-xs font-semibold z-50 pointer-events-none" style="padding-left:32px; padding-right:32px;">
+            <span id="status-time">9:41</span>
+            <div class="flex items-center gap-1.5">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- WeChat Capsule - 标准小程序胶囊按钮 -->
+        <div class="wechat-capsule">
+            <div class="cap-btn"><i class="fas fa-ellipsis-h"></i></div>
+            <div class="cap-btn"><i class="far fa-circle"></i></div>
+        </div>
+
+        <!-- Screen Content -->
+        <div class="screen-content" id="screen">
+
+            <!-- ========== 登录页 ========== -->
+            <div class="page" id="page-login">
+                <div class="flex flex-col items-center justify-center h-full px-8" style="min-height:700px;">
+                    <div class="w-20 h-20 bg-brand rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-brand/20">
+                        <i class="fas fa-book-open text-white text-3xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-800 mb-2">英语周报双语阅读本</h1>
+                    <p class="text-slate-400 text-sm mb-12">家长端 · 陪伴孩子阅读成长</p>
+                    
+                    <button onclick="showToast('微信授权登录成功');switchPage('page-home')" class="btn-press w-full bg-[#07C160] text-white py-3.5 rounded-xl font-medium text-base flex items-center justify-center gap-2 mb-4 shadow-lg shadow-green-500/20">
+                        <i class="fab fa-weixin text-lg"></i> 微信一键登录
+                    </button>
+                    <button onclick="showToast('验证码已发送');switchPage('page-home')" class="btn-press w-full bg-white border border-slate-200 text-slate-700 py-3.5 rounded-xl font-medium text-base flex items-center justify-center gap-2">
+                        <i class="fas fa-mobile-alt text-slate-400"></i> 手机号登录
+                    </button>
+                    
+                    <p class="text-xs text-slate-300 mt-8 text-center">登录即表示同意《用户协议》和《隐私政策》</p>
+                </div>
+            </div>
+
+            <!-- ========== 首页 ========== -->
+            <div class="page active" id="page-home">
+                <!-- Header -->
+                <div class="px-4 pt-2 pb-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <h1 class="text-xl font-bold text-slate-800">阅读追踪</h1>
+                    </div>
+                    <p class="text-xs text-slate-400">看看孩子的阅读情况</p>
+                </div>
+
+                <!-- 孩子选择区 -->
+                <div class="px-4 mb-4">
+                    <div class="flex gap-3 overflow-x-auto pb-1" style="scrollbar-width:none;">
+                        <div class="child-card active btn-press" onclick="switchChild(this)">
+                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" class="w-10 h-10 rounded-full object-cover border-2 border-brand">
+                            <span class="text-sm font-semibold text-slate-700">小雨</span>
+                            <span class="text-[10px] text-slate-400">五年级</span>
+                        </div>
+                        <div class="child-card btn-press" onclick="switchChild(this)">
+                            <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=100&h=100&fit=crop&crop=face" class="w-10 h-10 rounded-full object-cover border-2 border-slate-200">
+                            <span class="text-sm font-semibold text-slate-700">小轩</span>
+                            <span class="text-[10px] text-slate-400">三年级</span>
+                        </div>
+                        <div class="child-card btn-press" onclick="switchPage('page-bind')">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
+                                <i class="fas fa-plus text-slate-400 text-sm"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-500">添加</span>
+                            <span class="text-[10px] text-slate-300">孩子</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 阅读追踪区 -->
+                <div class="px-4 space-y-3">
+                    <!-- 阅读进度大卡片 -->
+                    <div class="card btn-press" onclick="switchPage('page-progress')">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
+                                    <i class="fas fa-book-reader text-brand text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700">阅读进度</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=200&h=280&fit=crop" class="book-cover">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-800 text-[15px] mb-1">四世同堂</h3>
+                                <p class="text-xs text-slate-400 mb-3">老舍 · 中国现代长篇小说经典名著</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand rounded-full" style="width:68%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-brand">68%</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-2">最近阅读：今天 14:32</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 阅读时长 + 已读书籍 双卡片 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="card btn-press" onclick="switchPage('page-time')">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                    <i class="fas fa-clock text-success text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700 text-sm">阅读时长</span>
+                            </div>
+                            <div class="mb-1">
+                                <span class="text-2xl font-bold text-slate-800">42</span>
+                                <span class="text-xs text-slate-400 ml-0.5">分钟</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">今日 · 本周 286 分钟</p>
+                        </div>
+                        <div class="card btn-press" onclick="switchPage('page-books')">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-warning text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700 text-sm">已读书籍</span>
+                            </div>
+                            <div class="mb-1">
+                                <span class="text-2xl font-bold text-slate-800">12</span>
+                                <span class="text-xs text-slate-400 ml-0.5">本</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">累计 · 本月 3 本</p>
+                        </div>
+                    </div>
+
+                    <!-- 老师任务卡片 -->
+                    <div class="card btn-press" onclick="switchPage('page-tasks')">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                    <i class="fas fa-clipboard-list text-purple-500 text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700">老师任务</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1 bg-brand-light rounded-xl p-3 text-center">
+                                <div class="text-lg font-bold text-brand">2</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">进行中</div>
+                            </div>
+                            <div class="flex-1 bg-green-50 rounded-xl p-3 text-center">
+                                <div class="text-lg font-bold text-success">8</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">已完成</div>
+                            </div>
+                            <div class="flex-1 bg-red-50 rounded-xl p-3 text-center">
+                                <div class="text-lg font-bold text-danger">1</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">已逾期</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 消息通知卡片 -->
+                    <div class="card btn-press" onclick="switchPage('page-messages')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center">
+                                    <i class="fas fa-envelope text-brand"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-700 text-sm">消息通知</div>
+                                    <div class="text-xs text-slate-400 mt-0.5">李老师布置了新任务《小王子》阅读</div>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <span class="w-5 h-5 bg-danger rounded-full text-white text-[10px] flex items-center justify-center font-bold">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 进度详情页 ========== -->
+            <div class="page" id="page-progress">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-home')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">阅读进度</h2>
+                    <div class="w-8"></div>
+                </div>
+                <!-- 当前孩子标识 -->
+                <div class="px-4 mb-3">
+                    <div class="child-indicator">
+                        <i class="fas fa-user text-xs"></i>
+                        <span>当前查看：小雨（五年级）</span>
+                    </div>
+                </div>
+                <div class="px-4 space-y-3">
+                    <div class="card flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=200&h=280&fit=crop" class="book-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">四世同堂</h3>
+                            <p class="text-xs text-slate-400 mt-1">老舍</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-brand rounded-full" style="width:68%"></div>
+                                </div>
+                                <span class="text-sm font-bold text-brand">68%</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">读到第 12 章 · 共 22 章</p>
+                        </div>
+                    </div>
+                    <div class="card flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=200&h=280&fit=crop" class="book-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">Oliver Twist</h3>
+                            <p class="text-xs text-slate-400 mt-1">雾都孤儿 · Charles Dickens / 查尔斯·狄更斯</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-warning rounded-full" style="width:35%"></div>
+                                </div>
+                                <span class="text-sm font-bold text-warning">35%</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">读到第 8 章 · 共 27 章</p>
+                        </div>
+                    </div>
+                    <div class="card flex items-center gap-4 opacity-60">
+                        <img src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=200&h=280&fit=crop" class="book-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">中国国家博物馆儿童历史百科绘本</h3>
+                            <p class="text-xs text-slate-400 mt-1">中国国家博物馆</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-slate-300 rounded-full" style="width:12%"></div>
+                                </div>
+                                <span class="text-sm font-bold text-slate-400">12%</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">读到第 3 章 · 共 17 章</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 时长详情页 ========== -->
+            <div class="page" id="page-time">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-home')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">阅读时长</h2>
+                    <div class="w-8"></div>
+                </div>
+                <!-- 当前孩子标识 -->
+                <div class="px-4 mb-3">
+                    <div class="child-indicator">
+                        <i class="fas fa-user text-xs"></i>
+                        <span>当前查看：小雨（五年级）</span>
+                    </div>
+                </div>
+                <div class="px-4">
+                    <!-- 总览卡片 -->
+                    <div class="card mb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">本周累计</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-3xl font-bold text-slate-800">286</span>
+                                    <span class="text-sm text-slate-400">分钟</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-slate-400 mb-1">较上周</p>
+                                <span class="text-sm font-semibold text-success">+12% <i class="fas fa-arrow-up text-xs"></i></span>
+                            </div>
+                        </div>
+                        <!-- 时段切换 -->
+                        <div class="flex bg-slate-100 rounded-xl p-1 mb-4">
+                            <button class="flex-1 py-2 text-xs font-medium rounded-lg bg-white text-slate-700 shadow-sm">日</button>
+                            <button class="flex-1 py-2 text-xs font-medium rounded-lg text-slate-400">周</button>
+                            <button class="flex-1 py-2 text-xs font-medium rounded-lg text-slate-400">月</button>
+                        </div>
+                        <!-- 柱状图 -->
+                        <div class="flex items-end justify-between h-32 gap-2 px-1">
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-brand rounded-t-lg chart-bar" style="height:45%"></div>
+                                <span class="text-[10px] text-slate-400">周一</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-brand rounded-t-lg chart-bar" style="height:72%"></div>
+                                <span class="text-[10px] text-slate-400">周二</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-brand rounded-t-lg chart-bar" style="height:60%"></div>
+                                <span class="text-[10px] text-slate-400">周三</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-brand rounded-t-lg chart-bar" style="height:85%"></div>
+                                <span class="text-[10px] text-slate-400">周四</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-slate-200 rounded-t-lg chart-bar" style="height:15%"></div>
+                                <span class="text-[10px] text-slate-400">周五</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-brand rounded-t-lg chart-bar" style="height:90%"></div>
+                                <span class="text-[10px] text-slate-400">周六</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5 flex-1">
+                                <div class="w-full bg-brand rounded-t-lg chart-bar" style="height:55%"></div>
+                                <span class="text-[10px] text-slate-400">周日</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 今日明细 -->
+                    <div class="card">
+                        <h3 class="font-semibold text-slate-700 mb-3">今日明细</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-brand"></div>
+                                    <span class="text-sm text-slate-600">四世同堂</span>
+                                </div>
+                                <span class="text-sm font-medium text-slate-700">28 分钟</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-warning"></div>
+                                    <span class="text-sm text-slate-600">Oliver Twist</span>
+                                </div>
+                                <span class="text-sm font-medium text-slate-700">14 分钟</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 已读书籍列表 ========== -->
+            <div class="page" id="page-books">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-home')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">已读书籍</h2>
+                    <div class="w-8"></div>
+                </div>
+                <!-- 当前孩子标识 -->
+                <div class="px-4 mb-3">
+                    <div class="child-indicator">
+                        <i class="fas fa-user text-xs"></i>
+                        <span>当前查看：小雨（五年级）</span>
+                    </div>
+                </div>
+                <div class="px-4 space-y-3">
+                    <div class="card flex items-center gap-4 btn-press" onclick="switchPage('page-achievement')">
+                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200&h=280&fit=crop" class="book-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">草房子</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">曹文轩 · 儿童文学</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="status-tag status-done"><i class="fas fa-check text-[10px]"></i> 已读完</span>
+                                <span class="text-[11px] text-slate-400">2025.05.20</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <div class="card flex items-center gap-4 btn-press" onclick="switchPage('page-achievement')">
+                        <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=200&h=280&fit=crop" class="book-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">城南旧事</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">林海音 · 文学</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="status-tag status-done"><i class="fas fa-check text-[10px]"></i> 已读完</span>
+                                <span class="text-[11px] text-slate-400">2025.04.15</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <div class="card flex items-center gap-4 btn-press" onclick="switchPage('page-achievement')">
+                        <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&h=280&fit=crop" class="book-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">中国国家博物馆儿童历史百科绘本</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">中国国家博物馆 · 科普</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="status-tag status-done"><i class="fas fa-check text-[10px]"></i> 已读完</span>
+                                <span class="text-[11px] text-slate-400">2025.03.28</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 书籍成果页 ========== -->
+            <div class="page" id="page-achievement">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-books')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">学习成果</h2>
+                    <div class="w-8"></div>
+                </div>
+                <!-- 当前孩子标识 -->
+                <div class="px-4 mb-3">
+                    <div class="child-indicator">
+                        <i class="fas fa-user text-xs"></i>
+                        <span>当前查看：小雨（五年级）</span>
+                    </div>
+                </div>
+                <div class="px-4 space-y-3">
+                    <!-- 读后感卡片 1 -->
+                    <div class="card">
+                        <h4 class="font-semibold text-slate-700 mb-2">《草房子》读后感</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">读完《草房子》，我被桑桑和他的朋友们的故事深深打动了。油麻地的草房子虽然简陋，但那里充满了童年的欢笑和泪水。桑桑的勇敢、纸月的善良、杜小康的坚强，都让我明白了成长的意义。成长路上会有挫折，但只要我们保持善良和勇气，就能像草房子一样，在风雨中屹立不倒。</p>
+                        <p class="text-[11px] text-slate-400 mt-3">2025.05.20 · 字数 186</p>
+                    </div>
+                    <!-- 读后感卡片 2 -->
+                    <div class="card">
+                        <h4 class="font-semibold text-slate-700 mb-2">《草房子》读后感</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">第二次读《草房子》，我注意到了更多细节。秃鹤虽然因为光头被嘲笑，但他用自己的方式赢得了尊重。这让我明白，每个人都有自己的闪光点，不应该因为外表而自卑。</p>
+                        <p class="text-[11px] text-slate-400 mt-3">2025.05.22 · 字数 98</p>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 任务列表页 ========== -->
+            <div class="page" id="page-tasks">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-home')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">老师任务</h2>
+                    <div class="w-8"></div>
+                </div>
+                <!-- 当前孩子标识 -->
+                <div class="px-4 mb-3">
+                    <div class="child-indicator">
+                        <i class="fas fa-user text-xs"></i>
+                        <span>当前查看：小雨（五年级）</span>
+                    </div>
+                </div>
+                <div class="px-4">
+                    <!-- 状态筛选 -->
+                    <div class="flex bg-white rounded-xl p-1 mb-4 shadow-sm">
+                        <button class="flex-1 py-2 text-xs font-medium rounded-lg bg-brand text-white">进行中 2</button>
+                        <button class="flex-1 py-2 text-xs font-medium rounded-lg text-slate-400">已完成 8</button>
+                        <button class="flex-1 py-2 text-xs font-medium rounded-lg text-slate-400">已逾期 1</button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="card">
+                            <div class="flex items-start justify-between mb-2">
+                                <span class="status-tag status-ongoing"><i class="fas fa-circle text-[6px]"></i> 进行中</span>
+                                <span class="text-[11px] text-slate-400">截止 06.15</span>
+                            </div>
+                            <h3 class="font-semibold text-slate-800 mb-1">阅读《小王子》并写读后感</h3>
+                            <p class="text-xs text-slate-500">李老师 · 五年级语文</p>
+                            <div class="flex items-center gap-2 mt-3">
+                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-brand rounded-full" style="width:35%"></div>
+                                </div>
+                                <span class="text-[11px] text-slate-400">进度 35%</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="flex items-start justify-between mb-2">
+                                <span class="status-tag status-ongoing"><i class="fas fa-circle text-[6px]"></i> 进行中</span>
+                                <span class="text-[11px] text-slate-400">截止 06.20</span>
+                            </div>
+                            <h3 class="font-semibold text-slate-800 mb-1">完成《四世同堂》第 10-15 章</h3>
+                            <p class="text-xs text-slate-500">王老师 · 五年级语文</p>
+                            <div class="flex items-center gap-2 mt-3">
+                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-brand rounded-full" style="width:80%"></div>
+                                </div>
+                                <span class="text-[11px] text-slate-400">进度 80%</span>
+                            </div>
+                        </div>
+                        <div class="card opacity-70">
+                            <div class="flex items-start justify-between mb-2">
+                                <span class="status-tag status-overdue"><i class="fas fa-exclamation text-[8px]"></i> 已逾期</span>
+                                <span class="text-[11px] text-slate-400">截止 05.30</span>
+                            </div>
+                            <h3 class="font-semibold text-slate-800 mb-1">背诵《古诗词三首》</h3>
+                            <p class="text-xs text-slate-500">张老师 · 五年级语文</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 消息列表页 ========== -->
+            <div class="page" id="page-messages">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-home')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">消息通知</h2>
+                    <div class="w-8"></div>
+                </div>
+                <div class="px-4 space-y-3">
+                    <div class="card flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center shrink-0">
+                            <i class="fas fa-tasks text-brand text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-semibold text-slate-700 text-sm">新任务提醒</span>
+                                <span class="text-[11px] text-slate-400">今天</span>
+                            </div>
+                            <p class="text-xs text-slate-500 truncate">李老师布置了新任务《小王子》阅读并写读后感</p>
+                        </div>
+                        <span class="w-2 h-2 bg-danger rounded-full shrink-0 mt-1.5"></span>
+                    </div>
+                    <div class="card flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                            <i class="fas fa-check-circle text-success text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-semibold text-slate-700 text-sm">任务完成</span>
+                                <span class="text-[11px] text-slate-400">昨天</span>
+                            </div>
+                            <p class="text-xs text-slate-500 truncate">孩子已完成《草房子》阅读任务</p>
+                        </div>
+                        <span class="w-2 h-2 bg-danger rounded-full shrink-0 mt-1.5"></span>
+                    </div>
+                    <div class="card flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                            <i class="fas fa-exclamation-circle text-warning text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-semibold text-slate-700 text-sm">任务即将截止</span>
+                                <span class="text-[11px] text-slate-400">2天前</span>
+                            </div>
+                            <p class="text-xs text-slate-500 truncate">《四世同堂》阅读任务将于 3 天后截止</p>
+                        </div>
+                        <span class="w-2 h-2 bg-danger rounded-full shrink-0 mt-1.5"></span>
+                    </div>
+                    <div class="card flex items-start gap-3 opacity-60">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-bullhorn text-slate-400 text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-semibold text-slate-700 text-sm">系统公告</span>
+                                <span class="text-[11px] text-slate-400">05.20</span>
+                            </div>
+                            <p class="text-xs text-slate-500 truncate">英语周报双语阅读本 1.2 版本更新说明</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 阅读报告页 ========== -->
+            <div class="page" id="page-reports">
+                <div class="px-4 pt-2 pb-3">
+                    <h1 class="text-xl font-bold text-slate-800">阅读报告</h1>
+                </div>
+                <!-- 当前孩子标识 -->
+                <div class="px-4 mb-3">
+                    <div class="child-indicator">
+                        <i class="fas fa-user text-xs"></i>
+                        <span>当前查看：小雨（五年级）</span>
+                    </div>
+                </div>
+                <div class="px-4 space-y-3">
+                    <!-- 周报卡片 -->
+                    <div class="card btn-press">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-brand text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700">本周阅读周报</span>
+                            </div>
+                            <span class="text-[11px] text-slate-400">05.26 - 06.01</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="text-center">
+                                <div class="text-xl font-bold text-brand">286</div>
+                                <div class="text-[11px] text-slate-400">阅读分钟</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-bold text-success">1</div>
+                                <div class="text-[11px] text-slate-400">读完本书</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-bold text-warning">6</div>
+                                <div class="text-[11px] text-slate-400">阅读笔记</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <i class="fas fa-arrow-up text-success"></i>
+                            <span>较上周阅读时长增加 12%</span>
+                        </div>
+                    </div>
+                    <!-- 月报卡片 -->
+                    <div class="card btn-press opacity-70">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-purple-500 text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700">5月阅读月报</span>
+                            </div>
+                            <span class="text-[11px] text-slate-400">05.01 - 05.31</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="text-center">
+                                <div class="text-xl font-bold text-brand">1,240</div>
+                                <div class="text-[11px] text-slate-400">阅读分钟</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-bold text-success">3</div>
+                                <div class="text-[11px] text-slate-400">读完本书</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-bold text-warning">18</div>
+                                <div class="text-[11px] text-slate-400">阅读笔记</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <i class="fas fa-minus text-slate-400"></i>
+                            <span>与上月持平</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 我的页 ========== -->
+            <div class="page" id="page-profile">
+                <div class="px-4 pt-2 pb-3">
+                    <h1 class="text-xl font-bold text-slate-800">我的</h1>
+                </div>
+                <div class="px-4 space-y-3">
+                    <!-- 用户信息 -->
+                    <div class="card flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" class="w-14 h-14 rounded-full object-cover">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-slate-800">小雨妈妈</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">已绑定 2 个孩子</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <!-- 功能列表 -->
+                    <div class="card p-0 overflow-hidden">
+                        <div class="flex items-center gap-3 px-4 py-3.5 border-b border-slate-50 btn-press" onclick="switchPage('page-bind')">
+                            <div class="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
+                                <i class="fas fa-user-plus text-brand text-sm"></i>
+                            </div>
+                            <span class="flex-1 text-sm text-slate-700">绑定孩子</span>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="flex items-center gap-3 px-4 py-3.5 border-b border-slate-50 btn-press">
+                            <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                <i class="fas fa-bell text-success text-sm"></i>
+                            </div>
+                            <span class="flex-1 text-sm text-slate-700">消息通知设置</span>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="flex items-center gap-3 px-4 py-3.5 btn-press">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-warning text-sm"></i>
+                            </div>
+                            <span class="flex-1 text-sm text-slate-700">隐私设置</span>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="card p-0 overflow-hidden">
+                        <div class="flex items-center gap-3 px-4 py-3.5 border-b border-slate-50 btn-press" onclick="switchPage('page-contact')">
+                            <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                <i class="fas fa-headset text-purple-500 text-sm"></i>
+                            </div>
+                            <span class="flex-1 text-sm text-slate-700">联系我们</span>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="flex items-center gap-3 px-4 py-3.5 btn-press">
+                            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                                <i class="fas fa-info-circle text-slate-500 text-sm"></i>
+                            </div>
+                            <span class="flex-1 text-sm text-slate-700">关于</span>
+                            <span class="text-xs text-slate-400">v1.2.0</span>
+                        </div>
+                    </div>
+                    <button onclick="showToast('已退出登录');switchPage('page-login')" class="btn-press w-full bg-white text-danger py-3.5 rounded-xl font-medium text-sm shadow-sm">
+                        退出登录
+                    </button>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 联系我们页 ========== -->
+            <div class="page" id="page-contact">
+                <div class="nav-header">
+                    <button onclick="switchPage('page-profile')" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">联系我们</h2>
+                    <div class="w-8"></div>
+                </div>
+                <div class="px-4 space-y-4">
+                    <div class="card flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-light flex items-center justify-center shrink-0">
+                            <i class="fas fa-envelope text-brand text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">客服邮箱</p>
+                            <p class="text-base font-semibold text-slate-800">support@yingyuzhoubao.com</p>
+                        </div>
+                    </div>
+                    <div class="card flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+                            <i class="fas fa-phone-alt text-success text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">客服热线</p>
+                            <p class="text-base font-semibold text-slate-800">400-888-1234</p>
+                        </div>
+                    </div>
+                    <div class="card flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                            <i class="fas fa-clock text-warning text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">服务时间</p>
+                            <p class="text-base font-semibold text-slate-800">工作日 9:00 - 18:00</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+            <!-- ========== 绑定孩子页 ========== -->
+            <div class="page" id="page-bind">
+                <div class="nav-header">
+                    <button onclick="goBack()" class="btn-press w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-slate-500"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">绑定孩子</h2>
+                    <div class="w-8"></div>
+                </div>
+                <div class="px-4">
+                    <!-- 扫码区域 -->
+                    <div id="scan-area" class="card flex flex-col items-center py-8 mb-4">
+                        <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fas fa-qrcode text-slate-400 text-3xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-700 mb-1">扫描设备二维码</h3>
+                        <p class="text-xs text-slate-400 text-center mb-4">在阅读器「个人中心」找到<br>设备绑定二维码</p>
+                        <button onclick="simulateScan()" class="btn-press bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-medium">
+                            扫描绑定
+                        </button>
+                    </div>
+                    <!-- 扫码后显示的信息（默认隐藏，点击扫描绑定后显示） -->
+                    <div id="scan-result" class="hidden">
+                        <div class="card space-y-4 mb-4">
+                            <div>
+                                <label class="text-xs text-slate-500 mb-1.5 block">设备 SN 码</label>
+                                <input type="text" value="SN001" readonly class="w-full readonly-field rounded-xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500 mb-1.5 block">用户 ID</label>
+                                <input type="text" value="01" readonly class="w-full readonly-field rounded-xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500 mb-1.5 block">孩子姓名</label>
+                                <input type="text" placeholder="请输入孩子姓名" class="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand/20">
+                            </div>
+                            <button onclick="showToast('绑定成功');switchPage('page-home')" class="btn-press w-full bg-brand text-white py-3 rounded-xl text-sm font-medium">
+                                确认绑定
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-6"></div>
+            </div>
+
+        </div>
+
+        <!-- TabBar -->
+        <div class="tab-bar" id="tabbar">
+            <div class="tab-item active" onclick="switchTabPage('page-home', this)">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </div>
+            <div class="tab-item" onclick="switchTabPage('page-reports', this)">
+                <i class="fas fa-chart-pie"></i>
+                <span>报告</span>
+            </div>
+            <div class="tab-item" onclick="switchTabPage('page-profile', this)">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- 外部控制面板 -->
+    <div class="fixed right-8 top-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl p-4 w-48 space-y-2">
+        <h4 class="font-bold text-slate-700 text-sm mb-2">页面导航</h4>
+        <button onclick="switchPage('page-login')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">登录页</button>
+        <button onclick="switchPage('page-home')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">首页</button>
+        <button onclick="switchPage('page-progress')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">进度详情</button>
+        <button onclick="switchPage('page-time')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">时长详情</button>
+        <button onclick="switchPage('page-books')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">已读书籍</button>
+        <button onclick="switchPage('page-achievement')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">学习成果</button>
+        <button onclick="switchPage('page-tasks')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">任务列表</button>
+        <button onclick="switchPage('page-messages')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">消息列表</button>
+        <button onclick="switchPage('page-reports')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">阅读报告</button>
+        <button onclick="switchPage('page-profile')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">我的</button>
+        <button onclick="switchPage('page-contact')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">联系我们</button>
+        <button onclick="switchPage('page-bind')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs text-slate-600">绑定孩子</button>
+    </div>
+
+    <script>
+        let currentPage = 'page-home';
+        let pageHistory = [];
+
+        function switchPage(pageId) {
+            if (currentPage === pageId) return;
+            pageHistory.push(currentPage);
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            currentPage = pageId;
+            document.getElementById('screen').scrollTop = 0;
+            updateTabBar(pageId);
+        }
+
+        function goBack() {
+            const prev = pageHistory.pop() || 'page-home';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(prev).classList.add('active');
+            currentPage = prev;
+            updateTabBar(prev);
+        }
+
+        function switchTabPage(pageId, tabEl) {
+            pageHistory = [];
+            switchPage(pageId);
+        }
+
+        function updateTabBar(pageId) {
+            const tabs = document.querySelectorAll('.tab-item');
+            const tabPages = ['page-home', 'page-reports', 'page-profile'];
+            const idx = tabPages.indexOf(pageId);
+            tabs.forEach((t, i) => {
+                if (i === idx) t.classList.add('active');
+                else t.classList.remove('active');
+            });
+        }
+
+        function switchChild(el) {
+            document.querySelectorAll('.child-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            showToast('已切换到：' + el.querySelector('span').textContent);
+        }
+
+        function switchTab(btn, contentId) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('button').forEach(b => {
+                b.classList.remove('bg-brand', 'text-white');
+                b.classList.add('text-slate-400');
+            });
+            btn.classList.add('bg-brand', 'text-white');
+            btn.classList.remove('text-slate-400');
+            
+            ['ach-notes', 'ach-review', 'ach-words'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(contentId).classList.remove('hidden');
+        }
+
+        function simulateScan() {
+            document.getElementById('scan-area').classList.add('hidden');
+            document.getElementById('scan-result').classList.remove('hidden');
+            showToast('扫码成功，请填写孩子姓名');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('status-time').textContent = hours + ':' + minutes;
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+    </script>
+</body>
+</html>
