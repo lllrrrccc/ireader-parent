@@ -161,7 +161,7 @@
                 <!-- Header -->
                 <div class="px-4 pt-2 pb-3">
                     <div class="flex items-center justify-between mb-1">
-                        <h1 class="text-xl font-bold text-slate-800">阅读追踪</h1>
+                        <h1 class="text-xl font-bold text-slate-800">英语周报双语阅读器</h1>
                     </div>
                     <p class="text-xs text-slate-400">看看孩子的阅读情况</p>
                 </div>
@@ -191,6 +191,33 @@
 
                 <!-- 阅读追踪区 -->
                 <div class="px-4 space-y-3">
+                    <!-- 老师任务卡片 -->
+                    <div class="card btn-press" onclick="switchPage('page-tasks')">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                    <i class="fas fa-clipboard-list text-purple-500 text-sm"></i>
+                                </div>
+                                <span class="font-semibold text-slate-700">老师任务</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1 bg-brand-light rounded-xl p-3 text-center">
+                                <div class="text-lg font-bold text-brand">2</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">进行中</div>
+                            </div>
+                            <div class="flex-1 bg-green-50 rounded-xl p-3 text-center">
+                                <div class="text-lg font-bold text-success">8</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">已完成</div>
+                            </div>
+                            <div class="flex-1 bg-red-50 rounded-xl p-3 text-center">
+                                <div class="text-lg font-bold text-danger">1</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">已逾期</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 阅读进度大卡片 -->
                     <div class="card btn-press" onclick="switchPage('page-progress')">
                         <div class="flex items-center justify-between mb-3">
@@ -245,33 +272,6 @@
                                 <span class="text-xs text-slate-400 ml-0.5">本</span>
                             </div>
                             <p class="text-[11px] text-slate-400">累计 · 本月 3 本</p>
-                        </div>
-                    </div>
-
-                    <!-- 老师任务卡片 -->
-                    <div class="card btn-press" onclick="switchPage('page-tasks')">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                                    <i class="fas fa-clipboard-list text-purple-500 text-sm"></i>
-                                </div>
-                                <span class="font-semibold text-slate-700">老师任务</span>
-                            </div>
-                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="flex-1 bg-brand-light rounded-xl p-3 text-center">
-                                <div class="text-lg font-bold text-brand">2</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">进行中</div>
-                            </div>
-                            <div class="flex-1 bg-green-50 rounded-xl p-3 text-center">
-                                <div class="text-lg font-bold text-success">8</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">已完成</div>
-                            </div>
-                            <div class="flex-1 bg-red-50 rounded-xl p-3 text-center">
-                                <div class="text-lg font-bold text-danger">1</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">已逾期</div>
-                            </div>
                         </div>
                     </div>
 
@@ -686,65 +686,76 @@
                         <span>当前查看：小雨（五年级）</span>
                     </div>
                 </div>
+                <!-- 报告 Tab 切换 -->
+                <div class="px-4 mb-3">
+                    <div class="flex bg-white rounded-xl p-1 shadow-sm">
+                        <button class="flex-1 py-2 text-xs font-medium rounded-lg bg-brand text-white" onclick="switchReportTab(this,'report-weekly')">周报</button>
+                        <button class="flex-1 py-2 text-xs font-medium rounded-lg text-slate-400" onclick="switchReportTab(this,'report-monthly')">月报</button>
+                    </div>
+                </div>
                 <div class="px-4 space-y-3">
-                    <!-- 周报卡片 -->
-                    <div class="card btn-press">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
-                                    <i class="fas fa-chart-line text-brand text-sm"></i>
+                    <!-- 周报内容 -->
+                    <div id="report-weekly" class="space-y-3">
+                        <div class="card btn-press">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-brand text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold text-slate-700">本周阅读周报</span>
                                 </div>
-                                <span class="font-semibold text-slate-700">本周阅读周报</span>
+                                <span class="text-[11px] text-slate-400">05.26 - 06.01</span>
                             </div>
-                            <span class="text-[11px] text-slate-400">05.26 - 06.01</span>
-                        </div>
-                        <div class="grid grid-cols-3 gap-3 mb-3">
-                            <div class="text-center">
-                                <div class="text-xl font-bold text-brand">286</div>
-                                <div class="text-[11px] text-slate-400">阅读分钟</div>
+                            <div class="grid grid-cols-3 gap-3 mb-3">
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-brand">286</div>
+                                    <div class="text-[11px] text-slate-400">阅读分钟</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-success">1</div>
+                                    <div class="text-[11px] text-slate-400">读完本书</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-warning">6</div>
+                                    <div class="text-[11px] text-slate-400">阅读笔记</div>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <div class="text-xl font-bold text-success">1</div>
-                                <div class="text-[11px] text-slate-400">读完本书</div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fas fa-arrow-up text-success"></i>
+                                <span>较上周阅读时长增加 12%</span>
                             </div>
-                            <div class="text-center">
-                                <div class="text-xl font-bold text-warning">6</div>
-                                <div class="text-[11px] text-slate-400">阅读笔记</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 text-xs text-slate-500">
-                            <i class="fas fa-arrow-up text-success"></i>
-                            <span>较上周阅读时长增加 12%</span>
                         </div>
                     </div>
-                    <!-- 月报卡片 -->
-                    <div class="card btn-press opacity-70">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                                    <i class="fas fa-calendar-alt text-purple-500 text-sm"></i>
+                    <!-- 月报内容 -->
+                    <div id="report-monthly" class="space-y-3 hidden">
+                        <div class="card btn-press">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                        <i class="fas fa-calendar-alt text-purple-500 text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold text-slate-700">5月阅读月报</span>
                                 </div>
-                                <span class="font-semibold text-slate-700">5月阅读月报</span>
+                                <span class="text-[11px] text-slate-400">05.01 - 05.31</span>
                             </div>
-                            <span class="text-[11px] text-slate-400">05.01 - 05.31</span>
-                        </div>
-                        <div class="grid grid-cols-3 gap-3 mb-3">
-                            <div class="text-center">
-                                <div class="text-xl font-bold text-brand">1,240</div>
-                                <div class="text-[11px] text-slate-400">阅读分钟</div>
+                            <div class="grid grid-cols-3 gap-3 mb-3">
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-brand">1,240</div>
+                                    <div class="text-[11px] text-slate-400">阅读分钟</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-success">3</div>
+                                    <div class="text-[11px] text-slate-400">读完本书</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-warning">18</div>
+                                    <div class="text-[11px] text-slate-400">阅读笔记</div>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <div class="text-xl font-bold text-success">3</div>
-                                <div class="text-[11px] text-slate-400">读完本书</div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fas fa-minus text-slate-400"></i>
+                                <span>与上月持平</span>
                             </div>
-                            <div class="text-center">
-                                <div class="text-xl font-bold text-warning">18</div>
-                                <div class="text-[11px] text-slate-400">阅读笔记</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 text-xs text-slate-500">
-                            <i class="fas fa-minus text-slate-400"></i>
-                            <span>与上月持平</span>
                         </div>
                     </div>
                 </div>
@@ -991,6 +1002,21 @@
             btn.classList.remove('text-slate-400');
             
             ['ach-notes', 'ach-review', 'ach-words'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(contentId).classList.remove('hidden');
+        }
+
+        function switchReportTab(btn, contentId) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('button').forEach(b => {
+                b.classList.remove('bg-brand', 'text-white');
+                b.classList.add('text-slate-400');
+            });
+            btn.classList.add('bg-brand', 'text-white');
+            btn.classList.remove('text-slate-400');
+            
+            ['report-weekly', 'report-monthly'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(contentId).classList.remove('hidden');
